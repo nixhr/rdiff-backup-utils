@@ -1,0 +1,28 @@
+# [profile_name] - this is how the profile is called. 
+# Invoke:
+# backup.sh <profile_name>
+# or 
+# check_backup.sh <profile_name>
+#
+# parameters:
+# host_address            - hostname or IP of the backed up machine
+# ssh_port                - ssh port to connect to
+# base_dir                - root directory to backup (on the backed up machine)
+# backup_dir              - target local directory where backup will resid
+# exclude_list            - list of excluded files/folders (see man rdiff-backup for explanation)
+# retention_period        - delete backups older than (see man rdiff-backup for explanation)
+# critical_age            - what is the threshold age of backup (in hours) that you can tolerate 
+#                           before raising an alert (used by nagios plugin check_rdiff-backup)
+# mount_check             - check if mountpoint is mounted before proceeding
+
+[myhost]
+host_address = myhost.mydomain.com
+ssh_port     = 22
+ssh_identity = /root/.ssh/id_rsa
+base_dir     = /
+backup_dir   = /backup/rdiff-backup/myhost.mydomain.com
+exclude      = /proc/** /sys/** /tmp** /dev/** 
+retention_period = 3M
+critical_age = 6
+mount_check  = /backup
+

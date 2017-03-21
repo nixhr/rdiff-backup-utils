@@ -9,6 +9,7 @@
 # 2 - another rdiff-backup process found running (by checking TMPFILE)
 # 3 - backup failed for some reason
 # 4 - missing configuration
+# 5 - mountpoint not mounted
 
 INIFILE="/opt/backup/backup.ini"
 [[ -z $1 ]] && printf "FATAL: Missing argument\n\nUsage:\n$0 <backup_profile>\n" && exit 1
@@ -37,6 +38,15 @@ EXCLUDE=$(crudini --get $INIFILE $PROFILE exclude)
 RETENTION_PERIOD=$(crudini --get $INIFILE $PROFILE retention_period)
 [[ -z $RETENTION_PERIOD ]] && printf "FATAL: missing 'retention_period' config option for profile ${PROFILE} in $INIFILE\n" && exit 4
 
+MOUNT_CHECK=$(crudini --get $INIFILE $PROFILE mount_check)
+[[ -z $MOUNT_CHECK ]] && printf "FATAL: missing 'mount_check' config option for profile ${PROFILE} in $INIFILE\n" && exit 4
+
+if ! mountpoint -q ${MOUNT_CHECK} 
+then
+  printf "FATAL: $MOUNT_CHECK not mounted\n" 
+  exit 5
+fi
+
 set -f 
 
 for i in ${EXCLUDE}
@@ -61,4 +71,3 @@ else
   rm $TMPFILE
   exit 3
 fi
-
