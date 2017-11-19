@@ -1,0 +1,50 @@
+#!/bin/bash
+#
+# Sun Jan 22 22:31:55 CET 2017
+#
+# nagios plugin - checks last OK backup age
+#
+# exit codes:
+# 0 - OK
+# 1 - WARNING (not used)
+# 2 - CRITICAL
+
+PROFILE=$1
+
+INIFILE="/opt/backup/backup.ini"
+[[ -z $1 ]] && printf "CRITICAL - Missing argument\n\nUsage:\n$0 <backup_profile>\n" && exit 2
+
+PROFILE=$1
+[[ -z $(crudini --get $INIFILE |grep "^$PROFILE$") ]] && printf "CRITICAL - missing config section [${PROFILE}] in $INIFILE\n" && exit 2
+
+HOST_ADDRESS=$(crudini --get $INIFILE $PROFILE host_address)
+[[ -z $HOST_ADDRESS ]] && printf "FATAL: missing 'host_address' config option for profile ${PROFILE} in $INIFILE\n" && exit 2
+
+BASE_DIR=$(crudini --get $INIFILE $PROFILE base_dir)
+[[ -z $BASE_DIR ]] && printf "CRITICAL - missing 'base_dir' config option for profile ${PROFILE} in $INIFILE\n" && exit 2
+
+BACKUP_DIR=$(crudini --get $INIFILE $PROFILE backup_dir)
+[[ -z $BACKUP_DIR ]] && printf "CRITICAL - missing 'backup_dir' config option for profile ${PROFILE} in $INIFILE\n" && exit 2
+
+EXCLUDE=$(crudini --get $INIFILE $PROFILE exclude)
+[[ -z $EXCLUDE ]] && printf "CRITICAL - missing 'exclude' config option for profile ${PROFILE} in $INIFILE\n" && exit 2
+
+RETENTION_PERIOD=$(crudini --get $INIFILE $PROFILE retention_period)
+[[ -z $RETENTION_PERIOD ]] && printf "CRITICAL - missing 'retention_period' config option for profile ${PROFILE} in $INIFILE\n" && exit 2
+
+CRITICAL_AGE=$(crudini --get $INIFILE $PROFILE critical_age)
+[[ -z $CRITICAL_AGE ]] && printf "CRITICAL - missing 'retention_period' config option for profile ${PROFILE} in $INIFILE\n" && exit 2
+
+LAST_OK=$(find ${BACKUP_DIR}.LAST-OK -printf '%Tc\n')
+
+[[ -z $LAST_OK ]] && printf "CRITICAL - no successful backups found!\n" && exit 2
+
+SECONDS_DIFFERENCE_THRESHOLD=$(expr $CRITICAL_AGE \* 3600)
+[[ ! -d ${BACKUP_DIR} ]] && echo "CRITICAL - backup dir not found: ${BACKUP_DIR}" && exit 2
+TIME_NOW_EPOCH=$(date +%s)
+LAST_OK_EPOCH=$(date -d "$LAST_OK" +%s)
+DIFFERENCE_SECONDS=$(expr $TIME_NOW_EPOCH - $LAST_OK_EPOCH)
+DIFFERENCE_HOURS=$(expr $DIFFERENCE_SECONDS / 3600)
+[[ $DIFFERENCE_SECONDS -gt $SECONDS_DIFFERENCE_THRESHOLD ]] && echo "CRITICAL - last successful backup older than $CRITICAL_AGE hours ($LAST_OK)" && exit 2
+echo "OK - last successful backup less than $CRITICAL_AGE hours ago ($LAST_OK)" && exit 0
+
