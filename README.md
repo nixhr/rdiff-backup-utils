@@ -10,7 +10,7 @@
 
 1. Install [crudini](https://github.com/pixelb/crudini)
 2. Configure settings in `config.ini`
-3. Set the path to `config.ini` in `backup.sh` and `check_rdiff-backup` 
+3. Set the path to `config.ini` in `backup.sh` and `check_rdiff_backup` 
 4. Copy your public key to the backed up machine, put it in `/root/.ssh/authorized_keys`
   * Preferably, limit access rights, something like:
    `command="rdiff-backup --server --restrict-read-only /" ssh-rsa AAAA......`
