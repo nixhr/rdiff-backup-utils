@@ -60,7 +60,7 @@ touch $TMPFILE
 
 [[ ! -d ${BACKUP_DIR} ]] && printf "Destination directory ${BACKUP_DIR} does not exist. Initializing...\n" && mkdir -p ${BACKUP_DIR}
 
-if rdiff-backup --remote-schema "ssh -p ${SSH_PORT} -i ${SSH_IDENTITY} %s rdiff-backup" ${EXCLUDE_CMD} ${HOST_ADDRESS}::${BASE_DIR} $BACKUP_DIR
+if rdiff-backup --preserve-numerical-ids --remote-schema "ssh -o StrictHostKeyChecking=no -p ${SSH_PORT} -i ${SSH_IDENTITY} %s rdiff-backup" ${EXCLUDE_CMD} ${HOST_ADDRESS}::${BASE_DIR} $BACKUP_DIR
 then
   rdiff-backup --terminal-verbosity 0 --force --remove-older-than ${RETENTION_PERIOD} ${BACKUP_DIR}
   touch ${BACKUP_DIR}.LAST-OK
